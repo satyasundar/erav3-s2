@@ -1,6 +1,7 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, Response, JSONResponse
+from pydantic import BaseModel
 import httpx
 import os
 from dotenv import load_dotenv
@@ -17,6 +18,9 @@ app = FastAPI()
 # Mount the static files (HTML, CSS, JS, and images)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+class AnimalRequest(BaseModel):
+    animals: list[str]
+
 @app.get("/")
 async def read_index():
     return FileResponse("static/index.html")
@@ -29,23 +33,25 @@ async def upload_file(file: UploadFile = File(...)):
         "content_type": file.content_type
     }
 
-@app.get("/generate-image/{animal}")
-async def generate_image(animal: str):
+@app.post("/generate-image")
+async def generate_image(request: AnimalRequest):
     api_key = os.getenv("HUGGINGFACE_API_KEY")
     
     if not api_key:
         logger.error("Hugging Face API key not found")
         raise HTTPException(status_code=500, detail="Hugging Face API key not found")
 
-    api_url = "https://api-inference.huggingface.co/models/runwayml/stable-diffusion-v1-5"
+    # api_url = "https://api-inference.huggingface.co/models/runwayml/stable-diffusion-v1-5"
+    api_url = "https://api-inference.huggingface.co/models/ZB-Tech/Text-to-Image"
 
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json"
     }
 
+    animals = " and ".join(request.animals)
     payload = {
-        "inputs": f"A cute {animal} in a natural setting",
+        "inputs": f" {animals} together ",
     }
 
     try:

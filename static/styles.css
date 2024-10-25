@@ -34,13 +34,14 @@ h2 {
     padding-bottom: 10px;
 }
 
-#animal-radio {
+#animal-checkboxes {
     display: flex;
-    justify-content: space-around;
-    margin-bottom: 25px;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 20px;
 }
 
-.radio-label {
+.checkbox-label {
     display: flex;
     align-items: center;
     cursor: pointer;
@@ -49,44 +50,27 @@ h2 {
     transition: background-color 0.3s;
 }
 
-.radio-label:hover {
+.checkbox-label:hover {
     background-color: #e8f0fe;
 }
 
-.radio-label input[type="radio"] {
+.checkbox-label input[type="checkbox"] {
     margin-right: 10px;
-    appearance: none;
-    width: 20px;
-    height: 20px;
-    border: 2px solid #3498db;
-    border-radius: 50%;
-    outline: none;
-    transition: border-color 0.3s;
 }
 
-.radio-label input[type="radio"]:checked {
-    border-color: #2980b9;
+#generate-image-btn {
     background-color: #3498db;
-    box-shadow: inset 0 0 0 4px #fff;
-}
-
-.radio-label span {
-    font-size: 16px;
-}
-
-.file-input {
-    width: 100%;
-    padding: 12px;
-    margin-bottom: 20px;
-    border: 2px solid #3498db;
+    color: white;
+    border: none;
+    padding: 10px 20px;
     border-radius: 5px;
+    cursor: pointer;
     font-size: 16px;
-    transition: border-color 0.3s;
+    transition: background-color 0.3s;
 }
 
-.file-input:focus {
-    outline: none;
-    border-color: #2980b9;
+#generate-image-btn:hover {
+    background-color: #2980b9;
 }
 
 #animal-display, #file-info {
@@ -102,6 +86,35 @@ h2 {
     height: auto;
     border-radius: 5px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.file-input-wrapper {
+    position: relative;
+    overflow: hidden;
+    display: inline-block;
+}
+
+.file-input {
+    position: absolute;
+    font-size: 100px;
+    right: 0;
+    top: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.file-input-label {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #3498db;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.file-input-label:hover {
+    background-color: #2980b9;
 }
 
 #file-info p {
