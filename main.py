@@ -6,6 +6,9 @@ import httpx
 import os
 from dotenv import load_dotenv
 import logging
+from gradio_client import Client
+import base64
+from io import BytesIO
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -35,45 +38,35 @@ async def upload_file(file: UploadFile = File(...)):
 
 @app.post("/generate-image")
 async def generate_image(request: AnimalRequest):
-    api_key = os.getenv("HUGGINGFACE_API_KEY")
-    
-    if not api_key:
-        logger.error("Hugging Face API key not found")
-        raise HTTPException(status_code=500, detail="Hugging Face API key not found")
-
-    # api_url = "https://api-inference.huggingface.co/models/runwayml/stable-diffusion-v1-5"
-    api_url = "https://api-inference.huggingface.co/models/ZB-Tech/Text-to-Image"
-
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json"
-    }
-
     animals = " and ".join(request.animals)
-    payload = {
-        "inputs": f" {animals} together ",
-    }
+    prompt = f"{animals} together"
 
     try:
-        async with httpx.AsyncClient() as client:
-            response = await client.post(api_url, json=payload, headers=headers, timeout=30.0)
+        client = Client("black-forest-labs/FLUX.1-schnell")
+        #client = Client("black-forest-labs/FLUX.1-schnell")
+        result = client.predict(
+            prompt=prompt,
+            seed=0,
+            randomize_seed=True,
+            width=1024,
+            height=1024,
+            num_inference_steps=4,
+            api_name="/infer"
+        )
 
-        if response.status_code != 200:
-            logger.error(f"API request failed with status code {response.status_code}")
-            logger.error(f"Response content: {response.content}")
-            return JSONResponse(
-                status_code=response.status_code,
-                content={"detail": "Image generation failed", "api_response": response.text}
-            )
+        # The result is likely a tuple, where the first element is the image path
+        if isinstance(result, tuple) and len(result) > 0:
+            image_path = result[0]
+            with open(image_path, "rb") as image_file:
+                image_content = image_file.read()
+            return Response(content=image_content, media_type="image/png")
+        else:
+            logger.error(f"Unexpected result format: {result}")
+            raise HTTPException(status_code=500, detail="Unexpected result format from image generation")
 
-        return Response(content=response.content, media_type="image/png")
-
-    except httpx.RequestError as exc:
-        logger.error(f"An error occurred while requesting {exc.request.url!r}.")
-        raise HTTPException(status_code=500, detail=str(exc))
     except Exception as e:
         logger.error(f"An unexpected error occurred: {str(e)}")
-        raise HTTPException(status_code=500, detail="An unexpected error occurred")
+        raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn

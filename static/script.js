@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const animalDisplay = document.getElementById('animal-display');
     const fileInput = document.getElementById('file-input');
     const fileInfo = document.getElementById('file-info');
+    const loaderContainer = document.querySelector('.loader-container');
 
     generateImageBtn.addEventListener('click', async () => {
         const selectedAnimals = Array.from(animalCheckboxes)
@@ -11,7 +12,10 @@ document.addEventListener('DOMContentLoaded', () => {
             .map(checkbox => checkbox.value);
 
         if (selectedAnimals.length > 0) {
-            animalDisplay.innerHTML = '<p>Generating image...</p>';
+            animalDisplay.innerHTML = '';
+            loaderContainer.style.display = 'flex';
+            generateImageBtn.disabled = true;
+
             try {
                 const response = await fetch('/generate-image', {
                     method: 'POST',
@@ -36,6 +40,9 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (error) {
                 console.error('Error:', error);
                 animalDisplay.innerHTML = `<p>Error generating image: ${error.message}</p>`;
+            } finally {
+                loaderContainer.style.display = 'none';
+                generateImageBtn.disabled = false;
             }
         } else {
             animalDisplay.innerHTML = '<p>Please select at least one animal.</p>';
