@@ -31,29 +31,26 @@ async def upload_file(file: UploadFile = File(...)):
 
 @app.get("/generate-image/{animal}")
 async def generate_image(animal: str):
-    api_key = os.getenv("STABILITY_API_KEY")
+    api_key = os.getenv("HUGGINGFACE_API_KEY")
     
     if not api_key:
-        logger.error("Stability API key not found")
-        raise HTTPException(status_code=500, detail="Stability API key not found")
+        logger.error("Hugging Face API key not found")
+        raise HTTPException(status_code=500, detail="Hugging Face API key not found")
 
-    api_host = 'https://api.stability.ai/v2beta/stable-image/generate/core'
+    api_url = "https://api-inference.huggingface.co/models/runwayml/stable-diffusion-v1-5"
+
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
+    }
+
+    payload = {
+        "inputs": f"A cute {animal} in a natural setting",
+    }
 
     try:
         async with httpx.AsyncClient() as client:
-            response = await client.post(
-                api_host,
-                headers={
-                    "Authorization": f"Bearer {api_key}",
-                    "Accept": "image/*"
-                },
-                files={"none": ''},
-                data={
-                    "prompt": f"A cute {animal} in a natural setting",
-                    "output_format": "webp",
-                },
-                timeout=30.0  # Set a timeout of 30 seconds
-            )
+            response = await client.post(api_url, json=payload, headers=headers, timeout=30.0)
 
         if response.status_code != 200:
             logger.error(f"API request failed with status code {response.status_code}")
@@ -63,7 +60,7 @@ async def generate_image(animal: str):
                 content={"detail": "Image generation failed", "api_response": response.text}
             )
 
-        return Response(content=response.content, media_type="image/webp")
+        return Response(content=response.content, media_type="image/png")
 
     except httpx.RequestError as exc:
         logger.error(f"An error occurred while requesting {exc.request.url!r}.")
